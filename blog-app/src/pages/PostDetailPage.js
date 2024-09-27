@@ -1,27 +1,24 @@
-// src/pages/PostDetailPage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Button, TextField } from '@mui/material';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-const PostDetailPage = ({ posts }) => {
+
+const PostDetailPage = ({ posts, updatePost }) => {
   const { id } = useParams();
   const post = posts.find((post) => post.id === parseInt(id));
 
-  const [likes, setLikes] = useState(post.likes);
-  const [comments, setComments] = useState(post.comments);
+  const [likes, setLikes] = useState(post ? post.likes : 0);
+  const [comments, setComments] = useState(post ? post.comments : []);
   const [commentInput, setCommentInput] = useState('');
+  const [hasLiked, setHasLiked] = useState(false);
 
-  const handleLike = () => {
-    setLikes(likes + 1);
-  };
-
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
-    if (commentInput) {
-      setComments([...comments, commentInput]);
-      setCommentInput('');
+  // Check if user has already liked the post
+  useEffect(() => {
+    const likedPosts = JSON.parse(localStorage.getItem('likedPosts')) || [];
+    if (likedPosts.includes(post.id)) {
+      setHasLiked(true);
     }
-  };
+  }, [post.id]);
 
   if (!post) {
     return (
@@ -30,6 +27,35 @@ const PostDetailPage = ({ posts }) => {
       </Container>
     );
   }
+
+  const handleLike = () => {
+    if (!hasLiked) {
+      const newLikes = likes + 1;
+      setLikes(newLikes);
+
+      // Update the post's likes
+      updatePost({ ...post, likes: newLikes });
+
+      // Mark this post as liked in localStorage
+      const likedPosts = JSON.parse(localStorage.getItem('likedPosts')) || [];
+      likedPosts.push(post.id);
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+
+      setHasLiked(true);
+    }
+  };
+
+  const handleCommentSubmit = (e) => {
+    e.preventDefault();
+    if (commentInput.trim() !== '') {
+      const newComments = [...comments, commentInput];
+      setComments(newComments);
+      setCommentInput('');
+
+      // Update the post's comments
+      updatePost({ ...post, comments: newComments });
+    }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ marginTop: '2rem' }}>
@@ -42,32 +68,41 @@ const PostDetailPage = ({ posts }) => {
       <Typography variant="body2" color="textSecondary">
         Hashtags: {post.hashtags.join(', ')}
       </Typography>
-      <Button onClick={handleLike} variant="outlined" color="primary">
-        Like {likes}
-      </Button>
+      <Box sx={{ marginTop: '1rem' }}>
+        <Button
+          onClick={handleLike}
+          variant="contained"
+          color="primary"
+          disabled={hasLiked}
+        >
+          {hasLiked ? 'Liked' : 'Like'} ({likes})
+        </Button>
+      </Box>
+
+      {/* Comment Section */}
       <Box sx={{ marginTop: '2rem' }}>
-        <Typography variant="h5" gutterBottom>Comments</Typography>
+        <Typography variant="h5" gutterBottom>
+          Comments
+        </Typography>
         <form onSubmit={handleCommentSubmit}>
-          <TextField 
-            label="Add a comment" 
-            variant="outlined" 
-            fullWidth 
-            value={commentInput} 
-            onChange={(e) => setCommentInput(e.target.value)} 
+          <TextField
+            label="Add a comment"
+            variant="outlined"
+            fullWidth
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            sx={{ marginBottom: '1rem' }}
           />
-          <Button type="submit" variant="contained" color="primary" sx={{ marginTop: '1rem' }}>
-            Submit
+          <Button type="submit" variant="contained" color="primary">
+            Submit Comment
           </Button>
         </form>
         {comments.map((comment, index) => (
-          <Typography key={index} variant="body2" sx={{ marginTop: '1rem' }}>
-            {comment}
-          </Typography>
+          <Box key={index} sx={{ marginTop: '1rem' }}>
+            <Typography variant="body2">{comment}</Typography>
+          </Box>
         ))}
       </Box>
-      <Button component={Link} to="/posts" variant="outlined" color="primary">
-        Back to Posts
-      </Button>
     </Container>
   );
 };
