@@ -1,0 +1,23 @@
+.navbar {
+    box-shadow: none; /* Remove box shadow */
+  }
+  
+  .nav-button {
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Change color on hover */
+    color: #fff; /* Text color on hover */
+  }
+  
+  .get-started-button {
+    background-color: #4caf50; /* Green color for 'Get Started' */
+    color: white;
+    transition: background-color 0.3s;
+  }
+  
+  .get-started-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+  }
+  
